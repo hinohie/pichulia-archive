@@ -1,0 +1,81 @@
+# User-specific files
+*.suo
+*.user
+*.sln.docstates
+*.pyc
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+[Bb]in/
+[Oo]bj/
+
+# MSTest test Results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+
+# OS generated files #
+.DS_Store*
+Icon?
+
+# Visual C++ cache files
+ipch/
+*.aps
+*.ncb
+*.opensdf
+*.sdf
+*.cachefile
+
+# Visual Studio profiler
+*.psess
+*.vsp
+*.vspx
+
+# Guidance Automation Toolkit
+*.gpState
+
+# Remainings from resolvings conflicts in Source Control
+*.orig
+
+# Remove .vscode
+.vscode/*
+*.code-workspace
+
+# SQL Server files
+**/App_Data/*.mdf
+**/App_Data/*.ldf
+**/App_Data/*.sdf
+
+#whatelse
+*~
+*.o
+*.o.d
+*.pc
+*.lo
+*.loT
+*.la
+*.so
+*.swp
+*.gcov
+*.gcda
+*.class
+*.classpath
+*.a
+*.apk
+*.ap_
+*.example
+*.test
+*.fodt
+*.orig
+*.so
+.svn
+*.dex
+*.gcno
+.deps
+.libs
+.vs/*
+x86/*
+x64/*
+*.vcxproj.filters
+*.vcxproj.user
