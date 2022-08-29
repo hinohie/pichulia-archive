@@ -39,7 +39,7 @@ ipch/
 *.orig
 
 # Remove .vscode
-.vscode/*
+*/.vscode/*
 *.code-workspace
 
 # SQL Server files
@@ -51,6 +51,7 @@ ipch/
 *~
 *.o
 *.o.d
+*.exe
 *.pc
 *.lo
 *.loT
