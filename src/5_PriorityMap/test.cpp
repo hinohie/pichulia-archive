@@ -1,22 +1,28 @@
 #include <stdio.h>
+#include <algorithm>
 #include "priority_map.h"
+
 
 int main()
 {
     int i, j, k;
-    std::priority_map<int, int> tm;
-    tm.insert(3, 5);
-    tm.insert(5, 8);
-    tm.insert(8, 1);
-
-    printf("%zu %d == %d\n", tm.size(), tm.top(), 8);
-
-    tm.insert(5, 3);
-    printf("%zu %d == %d\n", tm.size(), tm.top(), 5);
-
-    tm.pop();
-    printf("%zu %d == %d\n", tm.size(), tm.top(), 3);
-    
-    tm.pop();
-    printf("%zu %d == %d\n", tm.size(), tm.top(), 1);
+    int n, m;
+    wahaha::priority_map<int, std::pair<int, int>> tm;
+    scanf("%d",&n);
+    for(i=1;i<=n;i++){
+        scanf("%d",&j);
+        tm.insert(i, std::pair<int, int>(-j, -i));
+    }
+    scanf("%d",&m);
+    while(m--){
+        int cmd;
+        scanf("%d",&cmd);
+        if(cmd==2){
+            printf("%d\n",-tm.top().second);
+        }
+        else{
+            scanf("%d %d",&i,&j);
+            tm.insert(i, std::pair<int, int>(-j, -i));
+        }
+    }
 }
