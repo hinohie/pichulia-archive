@@ -138,7 +138,7 @@ namespace wahaha
             HeapIndex hid;
             auto mapIter = ap.lower_bound(key);
 
-            if(mapIter == ap.end() || std::less<Key>()(key, mapIter->first)){
+            if(mapIter == ap.end() || KeyComp()(key, mapIter->first)){
                 hid = static_cast<HeapIndex>(ap.size());
                 auto newIter = ap.insert(mapIter, {key, hid});
                 heap.emplace_back(&newIter->first, value);
