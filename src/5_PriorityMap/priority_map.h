@@ -59,18 +59,13 @@ namespace wahaha
             {
             }
 
-            const std::pair<const Key&, const Value&> operator*() const noexcept {
+            const std::pair<const Key&, const Value&> operator*() const {
                 assert(map);
                 assert(index < map->ap.size());
-                Node& node = &map->heap[index];
+                const Node& node = map->heap[index];
                 return {*node.keyPtr, node.value};
             }
-            const std::pair<const Key&, const Value&> operator->() const noexcept {
-                assert(map);
-                assert(index < map->ap.size());
-                Node& node = &map->heap[index];
-                return {*node.keyPtr, node.value};
-            }
+            const std::pair<const Key&, const Value&>* operator->() = delete;
 
             Iterator& operator++() noexcept {
                 ++index;
