@@ -7,6 +7,7 @@ int main()
     int i, j, k;
     int n, m;
     wahaha::priority_map<int, std::pair<int, int>> tm;
+
     scanf("%d",&n);
     for(i=1;i<=n;i++){
         scanf("%d",&j);
