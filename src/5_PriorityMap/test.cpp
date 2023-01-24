@@ -2,7 +2,6 @@
 #include <algorithm>
 #include "priority_map.h"
 
-
 int main()
 {
     int i, j, k;
