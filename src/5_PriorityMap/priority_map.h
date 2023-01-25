@@ -25,6 +25,7 @@ namespace wahaha
             : keyPtr(node.keyPtr), value(node.value)
             {
             }
+            // TODO : can we use this only if is_nothrow_move_constructible?
             Node(Node&& node) noexcept
             : keyPtr(node.keyPtr), value(std::move(node.value))
             {
@@ -35,11 +36,13 @@ namespace wahaha
                 this->value = node.value;
                 return *this;
             }
+            // TODO : can we use this only if is_nothrow_move_constructible?
             Node& operator=(Node&& node) noexcept {
                 this->keyPtr = node.keyPtr;
                 this->value = std::move(node.value);
                 return *this;
             }
+
             const Key* keyPtr;
             Value value;
         };
@@ -128,6 +131,13 @@ namespace wahaha
         size_t size() const{
             return ap.size();
         }
+        bool empty() const{
+            return ap.empty();
+        }
+        const Key& topKey() const{
+            assert(ap.size() > 0);
+            return *heap[0].keyPtr;
+        }
         const Value& top() const{
             assert(ap.size() > 0);
             return heap[0].value;
@@ -181,6 +191,7 @@ namespace wahaha
                 ap[*heap[rid].keyPtr] = rid;
             }
             ap.erase(*heap[lastHl].keyPtr);
+            heap.pop_back();
             __update(hid);
         }
         void __update(HeapIndex hid){
@@ -197,9 +208,9 @@ namespace wahaha
                 }
             }
             while(hid * 2 + 1 < ap.size()){
-                int pid = hid*2 + 1;
-                int qid = hid*2 + 2;
-                int rid = pid;
+                HeapIndex pid = hid*2 + 1;
+                HeapIndex qid = hid*2 + 2;
+                HeapIndex rid = pid;
                 if(qid < ap.size()){
                     if(ValueComp()(heap[rid].value, heap[qid].value)){
                         rid = qid;
