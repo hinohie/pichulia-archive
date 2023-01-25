@@ -80,3 +80,5 @@ x86/*
 x64/*
 *.vcxproj.filters
 *.vcxproj.user
+*.vscode/
+*.cache/

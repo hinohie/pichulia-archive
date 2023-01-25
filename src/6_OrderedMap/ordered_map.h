@@ -152,6 +152,15 @@ namespace wahaha
 
             return Iterator(this, mapIter->second);
         }
+        Value& operator[](Key key) {
+            auto mapIter = ap.find(key);
+            if(mapIter == ap.end()){
+                insert(key, Value());
+            }
+
+            auto listIter = ap[key];
+            return (*listIter).value;
+        }
         const Value& operator[](Key key) const{
             auto mapIter = ap.find(key);
             if(mapIter == ap.end()){
