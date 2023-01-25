@@ -6,6 +6,7 @@
 #include<random>
 #include<string>
 #include<unordered_map>
+#include<set>
 #include<assert.h>
 #include<time.h>
 #include "priority_map.h"
@@ -16,9 +17,9 @@ using pil = pair<int, lld>;
 const int MAX_N = 200000;
 const int MAX_M = 400000;
 const int MIN_VALUE = 1;
-const int MAX_VALUE = 1000;
+const int MAX_VALUE = 10;
 const int SMALL_N = 20;
-const int tc_count = 1;
+const int tc_count = 10;
 
 static mt19937 rnd;
 void setseed(lld seed){
@@ -138,16 +139,21 @@ void generate_a(int tv)
   n = MAX_N;
   m = MAX_M;
   for(i=0;i<n;i++){
+    v[i].clear();
+    v[i].shrink_to_fit();
     random_box[i] = i;
   }
 
   shuffle(random_box, random_box+n, rnd);
+
+  std::set<pii> ss;
 
   si = random_box[0];
   int edge_cnt=0;
   for(i=0;i<n-1;i++){
     int si = random_box[i];
     int ei = random_box[i+1];
+    ss.insert(pii(si, ei));
     v[si].push_back(pil(ei, nextint(MIN_VALUE, MAX_VALUE)));
     edge_cnt++;
   }
@@ -155,6 +161,9 @@ void generate_a(int tv)
     int si = random_box[nextint(0, n-1)];
     int ei = random_box[nextint(0, n-1)];
     if(si == ei)continue;
+    if(ss.find(pii(si, ei)) != ss.end())continue;
+
+    ss.insert(pii(si, ei));
     v[si].push_back(pil(ei, nextint(MIN_VALUE, MAX_VALUE)));
     edge_cnt++;
   }
