@@ -1,7 +1,7 @@
 #ifndef __PICHULIA_ORDERED_MAP_H__
 #define __PICHULIA_ORDERED_MAP_H__
 
-#include<map>
+#include<unordered_map>
 #include<algorithm>
 #include<list>
 #include<stdint.h>
@@ -10,7 +10,7 @@
 
 namespace wahaha
 {
-    template<typename Key, typename Value, typename KeyComp = std::less<Key>>
+    template<typename Key, typename Value, typename KeyHash = std::hash<Key>>
     class ordered_map
     {
     public:
@@ -26,7 +26,7 @@ namespace wahaha
             {
             }
             Node(Node&& node) noexcept
-            : keyPtr(node.keyPtr), value(std::move(node.value))
+            : keyPtr(node.keyPtr), value(std::move_if_noexcept(node.value))
             {
             }
 
@@ -37,10 +37,10 @@ namespace wahaha
             }
             Node& operator=(Node&& node) noexcept {
                 this->keyPtr = node.keyPtr;
-                this->value = std::move(node.value);
+                this->value = std::move_if_noexcept(node.value);
                 return *this;
             }
-            const Key* keyPtr;
+            const Key* __restrict__ keyPtr;
             Value value;
         };
         using ListContainer = std::list<Node>;
@@ -50,11 +50,11 @@ namespace wahaha
         struct Iterator
         {
         public:
-            ordered_map<Key, Value, KeyComp>* map{nullptr};
+            const ordered_map<Key, Value, KeyHash>* __restrict__ map{nullptr};
             ListIterator iter{};
             
             Iterator() noexcept = default;
-            Iterator(ordered_map<Key, Value, KeyComp>* map, ListIterator iter)
+            Iterator(const ordered_map<Key, Value, KeyHash>* map, ListIterator iter)
             : map(map), iter(iter)
             {
             }
@@ -97,7 +97,7 @@ namespace wahaha
     public:
         using iterator = Iterator;
 
-        using MapContainer = std::map<Key, ListIterator, KeyComp>; // Helper of key-index
+        using MapContainer = std::unordered_map<Key, ListIterator, KeyHash>; // Helper of key-index
 
         ordered_map(){
         }
@@ -113,11 +113,11 @@ namespace wahaha
 
         iterator insert(const Key& key, const Value& value)
         {
-            auto mapIter = ap.lower_bound(key);
+            auto mapIter = ap.find(key);
 
-            if(mapIter == ap.end() || KeyComp()(key, mapIter->first)){
+            if(mapIter == ap.end()){
                 // Insert null iter first
-                mapIter = ap.insert(mapIter, {key, list.begin()});
+                mapIter = ap.insert({key, list.begin()}).first;
 
                 auto listIter = list.insert(list.end(), Node(&mapIter->first, value));
                 //Replace iterator
@@ -145,7 +145,6 @@ namespace wahaha
         iterator find(const Key& key)
         {
             auto mapIter = ap.find(key);
-
             if(mapIter == ap.end()){
                 return end();
             }
