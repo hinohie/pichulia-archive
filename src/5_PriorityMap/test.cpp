@@ -9,15 +9,17 @@
 #include<set>
 #include<assert.h>
 #include<time.h>
+#include<bitset>
+#include<deque>
 #include "priority_map.h"
 using namespace std;
 using lld = long long int;
 using pii = pair<int, int>;
 using pil = pair<int, lld>;
 const int MAX_N = 200000;
-const int MAX_M = 400000;
-const int MIN_VALUE = 1;
-const int MAX_VALUE = 10;
+const int MAX_M = 600000;
+const int MIN_VALUE = 50;
+const int MAX_VALUE = 100;
 const int SMALL_N = 20;
 const int tc_count = 10;
 
@@ -40,13 +42,134 @@ int si;
 
 int op_type;
 lld type_sum[109];
-void inil()
+void inil(bool need_judge)
 {
   int i, j, k;
   for(i=0;i<n;i++){
-    orig_d[i] = my_d[i] = -1;
+    if(need_judge) my_d[i] = -1;
+    else orig_d[i] = -1;
   }
 }
+
+// SPFA
+namespace PICHULIA
+{
+  void process_spfa()
+  {
+    // Store into orig_d
+    std::queue<int> que;
+    std::bitset<MAX_N> mask;
+    my_d[si] = 0;
+    que.push(si);
+    mask.set(si);
+    while(!que.empty())
+    {
+      int qi = que.front();
+      que.pop();
+      mask.reset(qi);
+      lld tm = my_d[qi];
+      for(auto& iter : v[qi]){
+        int ei = iter.first;
+        if(my_d[ei] < 0 || my_d[ei] > tm + iter.second)
+        {
+          my_d[ei] = tm + iter.second;
+          if(!mask[ei])
+          {
+            mask.set(ei);
+            que.push(ei);
+          }
+        }
+      }
+    }
+  }
+} // namespace PICHULIA
+
+// SPFA (with SLF optimize)
+namespace PICHULIA
+{
+  void process_spfa_slf()
+  {
+    // Store into orig_d
+    std::deque<int> que;
+    std::bitset<MAX_N> mask;
+    my_d[si] = 0;
+    que.push_back(si);
+    mask.set(si);
+    while(!que.empty())
+    {
+      int qi = que.front();
+      que.pop_front();
+      mask.reset(qi);
+      lld tm = orig_d[qi];
+      for(auto& iter : v[qi]){
+        int ei = iter.first;
+        if(my_d[ei] < 0 || my_d[ei] > tm + iter.second)
+        {
+          my_d[ei] = tm + iter.second;
+          if(!mask[ei])
+          {
+            mask.set(ei);
+            if(!que.empty() && my_d[ei] < my_d[que.front()]){
+              que.push_front(ei);
+            }
+            else{
+              que.push_back(ei);
+            }
+          }
+        }
+      }
+    }
+  }
+} // namespace PICHULIA
+
+// SPFA (with LLL optimize)
+namespace PICHULIA
+{
+  void process_spfa_lll()
+  {
+    // Store into orig_d
+    std::queue<int> que;
+    std::bitset<MAX_N> mask;
+    my_d[si] = 0;
+    que.push(si);
+    mask.set(si);
+    lld quesum = 0;
+    while(!que.empty())
+    {
+      int qi = que.front();
+      que.pop();
+      mask.reset(qi);
+      lld tm = my_d[qi];
+      quesum -= tm;
+      for(auto& iter : v[qi]){
+        int ei = iter.first;
+        if(my_d[ei] < 0 || my_d[ei] > tm + iter.second)
+        {
+          if(!mask[ei])
+          {
+            mask.set(ei);
+            que.push(ei);
+            my_d[ei] = tm + iter.second;
+            quesum += my_d[ei];
+          }
+          else
+          {
+            quesum -= my_d[ei];
+            my_d[ei] = tm + iter.second;
+            quesum += my_d[ei];
+          }
+          // We can assume that at least 1 element is in queue
+          while(quesum < que.size() * my_d[que.front()])
+          {
+            int tqi = que.front();
+            que.pop();
+            que.push(tqi);
+          }
+        }
+      }
+    }
+  }
+} // namespace PICHULIA
 
 // Standard dijkstra
 namespace PICHULIA
@@ -104,24 +227,33 @@ namespace PICHULIA
 } // namespace PICHULIA
 //
 const string tv_name[]{
-    "Full random with connected",
+    "Full random with connected  ",
+    "Stressful connect for dijk 1",
+    "Stressful connect for dijk 2",
 };
 const string type_name[] = {
   "standard dijkstra",
+  "standard spfa    ",
+  "spfa with SLF    ",
+  "spfa with LLL    ",
   "priority_map     ",
 };
 void (*const op_func[])(void) = {
   PICHULIA::process_priority_queue,
+  PICHULIA::process_spfa,
+  PICHULIA::process_spfa_slf,
+  PICHULIA::process_spfa_lll,
   PICHULIA::process_priority_map,
 };
-const int tv_max = 1;
-const int op_max = 2;
+const int tv_max = 3;
+const int op_max = 5;
 static_assert(sizeof(tv_name) / sizeof(tv_name[0]) >= tv_max);
 static_assert(sizeof(type_name) / sizeof(type_name[0]) >= op_max);
 static_assert(sizeof(op_func) / sizeof(op_func[0]) >= op_max);
 
-bool judge(){
+bool judge(bool need_judge){
   int i, j, k;
+  if(!need_judge)return true;
   for(i=0;i<n;i++){
     if(orig_d[i] != my_d[i]){
       printf("pung at %s %d, (you : %d, expect : %d)\n",type_name[op_type].c_str(), i, orig_d[i], my_d[i]);
@@ -150,25 +282,101 @@ void generate_a(int tv)
 
   si = random_box[0];
   int edge_cnt=0;
-  for(i=0;i<n-1;i++){
-    int si = random_box[i];
-    int ei = random_box[i+1];
-    ss.insert(pii(si, ei));
-    v[si].push_back(pil(ei, nextint(MIN_VALUE, MAX_VALUE)));
-    edge_cnt++;
-  }
-  while(edge_cnt < m){
-    int si = random_box[nextint(0, n-1)];
-    int ei = random_box[nextint(0, n-1)];
-    if(si == ei)continue;
-    if(ss.find(pii(si, ei)) != ss.end())continue;
+  if(tv == 1)
+  {
+    // stressful for dijkstra. We don't care about MIN_VALUE, MAX_VALUE here.
+    int tn = n-nextint(10, 100);
+    if(m < 2*(tn-1) + (n-tn))m = 2*(tn-1) + (n-tn);
+    int target_value = 2*n+2;
+    for(i=1;i<tn;i++){
+      int si = random_box[0];
+      int ei = random_box[i];
+      ss.insert(pii(si, ei));
+      v[si].push_back(pil(ei, i));
+      edge_cnt++;
+    }
+    for(i=1;i<tn;i++){
+      int si = random_box[i];
+      int ei = random_box[tn];
+      ss.insert(pii(si, ei));
+      v[si].push_back(pil(ei, target_value + n - 2*i));
+      edge_cnt++;
+    }
+    for(i=0;i<n;i++){
+      int si = random_box[tn];
+      int ei = random_box[i];
+      if(i == tn)continue;
+      ss.insert(pii(si, ei));
+      v[si].push_back(pil(ei, nextint(MIN_VALUE, MAX_VALUE)));
+      edge_cnt++;
+    }
+    while(edge_cnt < m){
+      int si = random_box[nextint(0, n-1)];
+      int ei = random_box[nextint(0, n-1)];
+      if(si == ei)continue;
+      if(ss.find(pii(si, ei)) != ss.end())continue;
 
-    ss.insert(pii(si, ei));
-    v[si].push_back(pil(ei, nextint(MIN_VALUE, MAX_VALUE)));
-    edge_cnt++;
+      ss.insert(pii(si, ei));
+      v[si].push_back(pil(ei, nextint(target_value + 2*n, target_value + 3*n)));
+      edge_cnt++;
+    }
   }
-  for(i=0;i<n;i++){
-    shuffle(v[i].begin(), v[i].end(), rnd);
+  else if(tv == 2)
+  {
+    // stressful for dijkstra. We don't care about MIN_VALUE, MAX_VALUE here.
+    int tn = MAX_M/MAX_N - 1;
+    if(m < tn*n-1) m = tn*n-1;
+    int target_value = 2*n+2;
+    for(int j=0; j<tn; j++){
+      for(i=tn;i<n;i++){
+        int si = random_box[j];
+        int ei = random_box[i];
+        ss.insert(pii(si, ei));
+        v[si].push_back(pil(ei, target_value*2 + tn*2 + (tn - j*2)));
+        edge_cnt++;
+      }
+      if(j != 0){
+        int si = random_box[j-1];
+        int ei = random_box[j];
+        ss.insert(pii(si, ei));
+        v[si].push_back(pil(ei, 1));
+        edge_cnt++;
+      }
+    }
+
+    while(edge_cnt < m){
+      int si = random_box[nextint(tn, n-1)];
+      int ei = random_box[nextint(tn, n-1)];
+      if(si == ei)continue;
+      if(ss.find(pii(si, ei)) != ss.end())continue;
+
+      ss.insert(pii(si, ei));
+      v[si].push_back(pil(ei, nextint(1, target_value)));
+      edge_cnt++;
+    }
+  }
+  else // if tv == 0
+  {
+    for(i=1;i<n;i++){
+      int si = random_box[nextint(0, i-1)];
+      int ei = random_box[i];
+      ss.insert(pii(si, ei));
+      v[si].push_back(pil(ei, nextint(MIN_VALUE, MAX_VALUE)));
+      edge_cnt++;
+    }
+    while(edge_cnt < m){
+      int si = random_box[nextint(0, n-1)];
+      int ei = random_box[nextint(0, n-1)];
+      if(si == ei)continue;
+      if(ss.find(pii(si, ei)) != ss.end())continue;
+
+      ss.insert(pii(si, ei));
+      v[si].push_back(pil(ei, nextint(MIN_VALUE, MAX_VALUE)));
+      edge_cnt++;
+    }
+    for(i=0;i<n;i++){
+      shuffle(v[i].begin(), v[i].end(), rnd);
+    }
   }
 }
 void test_all(int tv)
@@ -176,17 +384,17 @@ void test_all(int tv)
   for(int repeat_cnt; repeat_cnt < tc_count; repeat_cnt++)
   {
     generate_a(tv);
-    inil();
     for(op_type = 0; op_type < op_max; op_type++)
     {
+      inil(op_type != 0);
       long t1, t2;
       t1 = clock();
       op_func[op_type]();
       t2 = clock();
       //printf("tv %3d %s // %ld ms\n", op_type, type_name[op_type].c_str(), t2 - t1);
       type_sum[op_type] += t2 - t1;
+      assert(judge(op_type != 0));
     }
-    assert(judge());
   }
 }
 int main()

@@ -25,9 +25,8 @@ namespace wahaha
             : keyPtr(node.keyPtr), value(node.value)
             {
             }
-            // TODO : can we use this only if is_nothrow_move_constructible?
             Node(Node&& node) noexcept
-            : keyPtr(node.keyPtr), value(std::move(node.value))
+            : keyPtr(node.keyPtr), value(std::move_if_noexcept(node.value))
             {
             }
 
@@ -36,10 +35,9 @@ namespace wahaha
                 this->value = node.value;
                 return *this;
             }
-            // TODO : can we use this only if is_nothrow_move_constructible?
             Node& operator=(Node&& node) noexcept {
                 this->keyPtr = node.keyPtr;
-                this->value = std::move(node.value);
+                this->value = std::move_if_noexcept(node.value);
                 return *this;
             }
 
