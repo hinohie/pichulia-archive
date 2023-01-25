@@ -392,7 +392,7 @@ void test_all(int tv)
       op_func[op_type]();
       t2 = clock();
       //printf("tv %3d %s // %ld ms\n", op_type, type_name[op_type].c_str(), t2 - t1);
-      type_sum[op_type] += t2 - t1;
+      type_sum[op_type] += (t2 - t1) * 1000 / CLOCKS_PER_SEC;
       assert(judge(op_type != 0));
     }
   }
@@ -407,10 +407,10 @@ int main()
     for(i=0;i<op_max;i++){
       type_sum[i] = 0;
     }
-    printf("test type : %s, n : %d, m : %d, value range(%d ~ %d) repeat %d times.\n", tv_name[tv].c_str(), MAX_N, MAX_M, MIN_VALUE, MAX_VALUE, tc_count);
+    printf("test type : %s, n : %d, m : %d, repeat %d times.\n", tv_name[tv].c_str(), MAX_N, MAX_M, tc_count);
     test_all(tv);
     for(i=0;i<op_max;i++){
-      printf("%s : %18lld\n", type_name[i].c_str(), type_sum[i]);
+      printf("%s : %18lld ms\n", type_name[i].c_str(), type_sum[i]);
     }
     tv++;
   }
