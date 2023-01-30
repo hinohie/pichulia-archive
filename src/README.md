@@ -13,5 +13,8 @@ SuffixArray code with multi string
 4. QuickRangeSort
 Quicksort with O(N log A)
 
-5. PriorityVector
+5. PriorityMap
 PriorityQueue (==Heap) Than we can fix / update the value of items.
+
+6. OrderedMap
+Map which hold the values ordered by inserted. It will use std::unorderd_map.
