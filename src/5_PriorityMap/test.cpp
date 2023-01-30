@@ -56,17 +56,17 @@ namespace PICHULIA
 {
   void process_spfa()
   {
-    // Store into orig_d
+    // Store into my_d
     std::queue<int> que;
-    std::bitset<MAX_N> mask;
+    std::vector<bool> mask(n, false);
     my_d[si] = 0;
     que.push(si);
-    mask.set(si);
+    mask[si] = true;
     while(!que.empty())
     {
       int qi = que.front();
       que.pop();
-      mask.reset(qi);
+      mask[qi] = false;
       lld tm = my_d[qi];
       for(auto& iter : v[qi]){
         int ei = iter.first;
@@ -75,7 +75,7 @@ namespace PICHULIA
           my_d[ei] = tm + iter.second;
           if(!mask[ei])
           {
-            mask.set(ei);
+            mask[ei] = true;
             que.push(ei);
           }
         }
@@ -89,18 +89,18 @@ namespace PICHULIA
 {
   void process_spfa_slf()
   {
-    // Store into orig_d
+    // Store into my_d
     std::deque<int> que;
-    std::bitset<MAX_N> mask;
+    std::vector<bool> mask(n, false);
     my_d[si] = 0;
     que.push_back(si);
-    mask.set(si);
+    mask[si] = true;
     while(!que.empty())
     {
       int qi = que.front();
       que.pop_front();
-      mask.reset(qi);
-      lld tm = orig_d[qi];
+      mask[qi] = false;
+      lld tm = my_d[qi];
       for(auto& iter : v[qi]){
         int ei = iter.first;
         if(my_d[ei] < 0 || my_d[ei] > tm + iter.second)
@@ -108,7 +108,7 @@ namespace PICHULIA
           my_d[ei] = tm + iter.second;
           if(!mask[ei])
           {
-            mask.set(ei);
+            mask[ei] = true;
             if(!que.empty() && my_d[ei] < my_d[que.front()]){
               que.push_front(ei);
             }
@@ -127,18 +127,18 @@ namespace PICHULIA
 {
   void process_spfa_lll()
   {
-    // Store into orig_d
+    // Store into my_d
     std::queue<int> que;
-    std::bitset<MAX_N> mask;
+    std::vector<bool> mask(n, false);
     my_d[si] = 0;
     que.push(si);
-    mask.set(si);
+    mask[si] = true;
     lld quesum = 0;
     while(!que.empty())
     {
       int qi = que.front();
       que.pop();
-      mask.reset(qi);
+      mask[qi] = false;
       lld tm = my_d[qi];
       quesum -= tm;
       for(auto& iter : v[qi]){
@@ -147,7 +147,7 @@ namespace PICHULIA
         {
           if(!mask[ei])
           {
-            mask.set(ei);
+            mask[ei] = true;
             que.push(ei);
             my_d[ei] = tm + iter.second;
             quesum += my_d[ei];
@@ -230,6 +230,8 @@ const string tv_name[]{
     "Full random with connected  ",
     "Stressful connect for dijk 1",
     "Stressful connect for dijk 2",
+    "Full connected prefect graph",
+    "Sparse connected 2D space   ", ///< This tc spend near 10 minute. Just skip it normal case.
 };
 const string type_name[] = {
   "standard dijkstra",
@@ -245,7 +247,7 @@ void (*const op_func[])(void) = {
   PICHULIA::process_spfa_lll,
   PICHULIA::process_priority_map,
 };
-const int tv_max = 3;
+const int tv_max = 4;
 const int op_max = 5;
 static_assert(sizeof(tv_name) / sizeof(tv_name[0]) >= tv_max);
 static_assert(sizeof(type_name) / sizeof(type_name[0]) >= op_max);
@@ -256,7 +258,7 @@ bool judge(bool need_judge){
   if(!need_judge)return true;
   for(i=0;i<n;i++){
     if(orig_d[i] != my_d[i]){
-      printf("pung at %s %d, (you : %d, expect : %d)\n",type_name[op_type].c_str(), i, orig_d[i], my_d[i]);
+      printf("pung at %s %d, (you : %lld, expect : %lld)\n",type_name[op_type].c_str(), i, my_d[i], orig_d[i]);
       return false;
     }
   }
@@ -355,6 +357,70 @@ void generate_a(int tv)
       edge_cnt++;
     }
   }
+  else if(tv == 3)
+  {
+    //n = (int)floor(sqrt(MAX_M));
+    n = 5000;
+    m = n*(n-1);
+    si = 0;
+    for(i=0;i<n;i++){
+      for(j=i+1;j<n;j++){
+        int si = i;
+        int ei = j;
+        v[si].push_back(pil(ei, nextint(MIN_VALUE, MAX_VALUE)));
+        v[ei].push_back(pil(si, nextint(MIN_VALUE, MAX_VALUE)));
+      }
+    }
+    for(i=0;i<n;i++){
+      shuffle(v[i].begin(), v[i].end(), rnd);
+    }
+  }
+  else if(tv == 4)
+  {
+    //n = (int)floor(sqrt(MAX_M));
+    n = 50000;
+    m = 0;
+    si = 0;
+    vector<std::pair<lld, lld>> pt(n);
+    for(i=0;i<n;i++){
+      pt[i].first = nextint(0, 500'000'000);
+      pt[i].second = nextint(0, 500'000'000);
+    }
+    auto cal_dist = [](const std::pair<lld, lld>& p, const std::pair<lld, lld>& q){
+        lld dx = p.first - q.first;
+        lld dy = p.second - q.second;
+        lld dist = (lld)(sqrt(dx*dx + dy*dy)) - 1;
+        if(dist < 1) dist = 1;
+        return dist;
+    };
+    for(i=0;i<n;i++){
+      // Connect only for short enough points
+      lld min_dist = -1;
+      for(j=0;j<n;j++){
+        int si = i;
+        int ei = j;
+        if(i==j)continue;
+        lld dist = cal_dist(pt[si], pt[ei]);
+        if(min_dist < 0 || min_dist > dist){
+          min_dist = dist;
+        }
+      }
+      for(j=0;j<n;j++){
+        int si = i;
+        int ei = j;
+        if(i==j)continue;
+        lld dist = cal_dist(pt[si], pt[ei]);
+        if(dist * 2 <= min_dist * 11)
+        {
+          v[si].push_back(pil(ei, dist));
+          m++;
+        }
+      }
+    }
+    for(i=0;i<n;i++){
+      shuffle(v[i].begin(), v[i].end(), rnd);
+    }
+  }
   else // if tv == 0
   {
     for(i=1;i<n;i++){
@@ -407,8 +473,8 @@ int main()
     for(i=0;i<op_max;i++){
       type_sum[i] = 0;
     }
-    printf("test type : %s, n : %d, m : %d, repeat %d times.\n", tv_name[tv].c_str(), MAX_N, MAX_M, tc_count);
     test_all(tv);
+    printf("test type : %s, n : %d, m : %d, repeat %d times.\n", tv_name[tv].c_str(), n, m, tc_count);
     for(i=0;i<op_max;i++){
       printf("%s : %18lld ms\n", type_name[i].c_str(), type_sum[i]);
     }
