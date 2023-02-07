@@ -107,7 +107,7 @@ private:
 			if (__eof)break;
 			if (c < '0' || c > '9')break;
 			// special case : -9'223'372'036'854'775'808
-			if(unlikely(minus && res == 9'223'372'036'854'775'80LL && c == '8')) return -9'223'372'036'854'775'808LL;
+			if(unlikely(minus && res == 9'223'372'036'854'775'80LL && c == '8')) return  static_cast<long long int>(0x8000000000000000LL);
 			res = (res * 10) + c - '0';
 		}
 		return minus ? -res : res;
@@ -317,7 +317,7 @@ private:
 			__putchar(eow);
 	}
 	void __nextlld(long long int x, char eow = ' ') {
-		if(unlikely(x == -9'223'372'036'854'775'808LL)){
+		if(unlikely(x ==  static_cast<long long int>(0x8000000000000000LL))){
 			// Special case.
 			// print 9,223,372,036,854,775,808
 			__putchar('-');
