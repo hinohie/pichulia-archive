@@ -5,6 +5,13 @@
 
 #include <stdio.h>
 
+#ifndef likely
+#define likely(x) __builtin_expect((x),1)
+#endif
+#ifndef unlikely
+#define unlikely(x) __builtin_expect((x),0)
+#endif
+
 namespace
 {
 class FastIn {
@@ -55,12 +62,14 @@ private:
 			c = __getchar();
 			if (__eof)return 0;
 			if (c == '-')minus = true;
-		} while (c < '0' || c>'9');
+		} while (c < '0' || c > '9');
 		res = c - '0';
 		while (1) {
 			c = __getchar();
 			if (__eof)break;
-			if (c < '0' || c>'9')break;
+			if (c < '0' || c > '9')break;
+			// special case : -2'147'483'648
+			if(unlikely(minus && res == 2'147'483'64 && c == '8')) return -2'147'483'648;
 			res = (res * 10) + c - '0';
 		}
 		return minus ? -res : res;
@@ -72,12 +81,12 @@ private:
 		do {
 			c = __getchar();
 			if (__eof)return 0;
-		} while (c < '0' || c>'9');
+		} while (c < '0' || c > '9');
 		res = c - '0';
 		while (1) {
 			c = __getchar();
 			if (__eof)break;
-			if (c < '0' || c>'9')break;
+			if (c < '0' || c > '9')break;
 			res = (res * 10) + c - '0';
 		}
 		return res;
@@ -96,7 +105,9 @@ private:
 		while (1) {
 			c = __getchar();
 			if (__eof)break;
-			if (c < '0' || c>'9')break;
+			if (c < '0' || c > '9')break;
+			// special case : -9'223'372'036'854'775'808
+			if(unlikely(minus && res == 9'223'372'036'854'775'80LL && c == '8')) return -9'223'372'036'854'775'808LL;
 			res = (res * 10) + c - '0';
 		}
 		return minus ? -res : res;
@@ -108,12 +119,12 @@ private:
 		do {
 			c = __getchar();
 			if (__eof)return 0;
-		} while (c < '0' || c>'9');
+		} while (c < '0' || c > '9');
 		res = c - '0';
 		while (1) {
 			c = __getchar();
 			if (__eof)break;
-			if (c < '0' || c>'9')break;
+			if (c < '0' || c > '9')break;
 			res = (res * 10) + c - '0';
 		}
 		return res;
@@ -255,19 +266,20 @@ private:
 		buf[pos++] = x;
 	}
 	void __nextint(int x, char eow = ' ') {
+		if(unlikely(x == -2'147'483'648)){
+			// Special case.
+			// print 2,147,483,648
+			__putchar('-');
+			__putchar('2');
+			__putchar('1');__putchar('4');__putchar('7');
+			__putchar('4');__putchar('8');__putchar('3');
+			__putchar('6');__putchar('4');__putchar('8');
+			__putchar(eow);
+			return;
+		}
 		if (x < 0) {
 			__putchar('-');
 			x = -x;
-			if(x < 0){
-				// Special case.
-				// print 2,147,483,648
-				__putchar('2');
-				__putchar('1');__putchar('4');__putchar('7');
-				__putchar('4');__putchar('8');__putchar('3');
-				__putchar('6');__putchar('4');__putchar('8');
-				__putchar(eow);
-				return;
-			}
 		}
 		if (x == 0) {
 			__putchar('0');
@@ -305,22 +317,23 @@ private:
 			__putchar(eow);
 	}
 	void __nextlld(long long int x, char eow = ' ') {
+		if(unlikely(x == -9'223'372'036'854'775'808LL)){
+			// Special case.
+			// print 9,223,372,036,854,775,808
+			__putchar('-');
+			__putchar('9');
+			__putchar('2');__putchar('2');__putchar('3');
+			__putchar('3');__putchar('7');__putchar('2');
+			__putchar('0');__putchar('3');__putchar('6');
+			__putchar('8');__putchar('5');__putchar('4');
+			__putchar('7');__putchar('7');__putchar('5');
+			__putchar('8');__putchar('0');__putchar('8');
+			__putchar(eow);
+			return;
+		}
 		if (x < 0) {
 			__putchar('-');
 			x = -x;
-			if(x < 0){
-				// Special case.
-				// print 9,223,372,036,854,775,807
-				__putchar('9');
-				__putchar('2');__putchar('2');__putchar('3');
-				__putchar('3');__putchar('7');__putchar('2');
-				__putchar('0');__putchar('3');__putchar('6');
-				__putchar('8');__putchar('5');__putchar('4');
-				__putchar('7');__putchar('7');__putchar('5');
-				__putchar('8');__putchar('0');__putchar('8');
-				__putchar(eow);
-				return;
-			}
 		}
 		if (x == 0) {
 			__putchar('0');
