@@ -171,7 +171,14 @@ namespace wahaha
             if(ap.count(key) == 0)return;
             __pop(ap[key]);
         }
-        
+
+        const Value& operator[](Key key) {
+            if(ap.count(key) == 0){
+                insert(key, Value());
+            }
+            HeapIndex hid = ap[key];
+            return heap[hid].value;
+        }
         const Value& operator[](Key key) const{
             if(ap.count(key) == 0){
                 return Value();
