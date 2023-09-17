@@ -127,6 +127,11 @@ namespace wahaha
             heap.clear();
             heap.shrink_to_fit();
         }
+        void reserve(int size)
+        {
+            ap.rehash(size*2);
+            heap.reserve(size);
+        }
         size_t size() const{
             return ap.size();
         }
