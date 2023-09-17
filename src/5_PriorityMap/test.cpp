@@ -11,7 +11,7 @@
 #include<time.h>
 #include<bitset>
 #include<deque>
-#include "priority_map.h"
+#include "priority_map_lite.h"
 using namespace std;
 using lld = long long int;
 using pii = pair<int, int>;
@@ -208,6 +208,7 @@ namespace PICHULIA
     // Store into my_d
     wahaha::priority_map<int, lld> tq;
     my_d[si] = 0;
+    tq.reserve(n);
     tq.insert(si, 0);
     while(!tq.empty())
     {

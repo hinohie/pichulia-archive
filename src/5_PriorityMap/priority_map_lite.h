@@ -10,6 +10,7 @@
 
 namespace wahaha
 {
+    // Liteweight priority_map without iterator and assert.
     template<typename Key, typename Value, typename KeyHash = std::hash<Key>, typename ValueComp = std::less<Value>>
     class priority_map
     {
@@ -17,103 +18,38 @@ namespace wahaha
         // public struct
         struct Node
         {
-            Node(const Key* keyPtr, const Value& value)
-            : keyPtr(keyPtr), value(value)
+            Node(const Key& key, const Value& value)
+            : key(key), value(value)
             {
             }
             Node(const Node& node)
-            : keyPtr(node.keyPtr), value(node.value)
+            : key(node.key), value(node.value)
             {
             }
             Node(Node&& node) noexcept
-            : keyPtr(node.keyPtr), value(std::move_if_noexcept(node.value))
+            : key(std::move_if_noexcept(node.key)), value(std::move_if_noexcept(node.value))
             {
             }
 
             Node& operator=(const Node& node){
-                this->keyPtr = node.keyPtr;
+                this->key = node.key;
                 this->value = node.value;
                 return *this;
             }
             Node& operator=(Node&& node) noexcept {
-                this->keyPtr = node.keyPtr;
+                this->key = std::move_if_noexcept(node.key);
                 this->value = std::move_if_noexcept(node.value);
                 return *this;
             }
 
-            const Key* __restrict__ keyPtr;
+            Key key;
             Value value;
         };
     public:
-        using HeapIndex = size_t;
-
-        /* Iterator */
-        struct Iterator
-        {
-        public:
-            const priority_map<Key, Value, KeyHash, ValueComp>* __restrict__ map = nullptr;
-            HeapIndex index = 0u;
-            
-            Iterator() noexcept = default;
-            Iterator(const priority_map<Key, Value, KeyHash, ValueComp>* map, HeapIndex index)
-            : map(map), index(index)
-            {
-            }
-
-            const std::pair<const Key&, const Value&> operator*() const {
-                assert(map);
-                assert(index < map->ap.size());
-                const Node& node = map->heap[index];
-                return {*node.keyPtr, node.value};
-            }
-            const std::pair<const Key&, const Value&>* operator->() = delete;
-
-            Iterator& operator++() noexcept {
-                ++index;
-                return *this;
-            }
-            Iterator operator++(int) noexcept {
-                Iterator temp = *this;
-                ++index;
-                return temp;
-            }
-            Iterator& operator--() noexcept {
-                --index;
-                return *this;
-            }
-            Iterator operator--(int) noexcept {
-                Iterator temp = *this;
-                --index;
-                return temp;
-            }
-
-            friend Iterator operator+(Iterator iter, HeapIndex diff) noexcept {
-                return Iterator(iter.map, iter.index + diff);
-            }
-            friend Iterator operator-(Iterator iter, HeapIndex diff) noexcept {
-                return Iterator(iter.map, iter.index - diff);
-            }
-            Iterator& operator+=(HeapIndex diff) noexcept {
-                index += diff;
-                return *this;
-            }
-            Iterator& operator-=(HeapIndex diff) noexcept {
-                index += diff;
-                return *this;
-            }
-
-            friend bool operator==(const Iterator& lhs, const Iterator& rhs) noexcept {
-                return lhs.map == rhs.map && lhs.index == rhs.index;
-            }
-
-            friend bool operator!=(const Iterator& lhs, const Iterator& rhs) noexcept {
-                return !(lhs == rhs);
-            }
-        };
+        using HeapIndex = int;
 
     public:
         using HeapContainer = std::vector<Node>;
-        using iterator = Iterator;
 
         using MapContainer = std::unordered_map<Key, HeapIndex, KeyHash>; // Helper of key-index
 
@@ -139,15 +75,15 @@ namespace wahaha
             return ap.empty();
         }
         const Key& topKey() const{
-            assert(ap.size() > 0);
-            return *heap[0].keyPtr;
+            //assert(ap.size() > 0);
+            return heap[0].key;
         }
         const Value& top() const{
-            assert(ap.size() > 0);
+            //assert(ap.size() > 0);
             return heap[0].value;
         }
 
-        iterator insert(const Key& key, const Value& value)
+        void insert(const Key& key, const Value& value)
         {
             HeapIndex hid;
             auto mapIter = ap.find(key);
@@ -155,7 +91,7 @@ namespace wahaha
             if(mapIter == ap.end()){
                 hid = static_cast<HeapIndex>(ap.size());
                 auto newIter = ap.insert(mapIter, {key, hid});
-                heap.emplace_back(&newIter->first, value);
+                heap.emplace_back(key, value);
             }
             else{
                 hid = mapIter->second;
@@ -163,17 +99,17 @@ namespace wahaha
             }
             __update(hid);
 
-            return begin() + (ap[key]);
+            //return begin() + (ap[key]);
         }
         void erase(const Key& key){
             pop(key);
         }
         void pop(){
-            if(ap.size() == 0)return;
+            //if(ap.size() == 0)return;
             __pop(0);
         }
         void pop(const Key& key){
-            if(ap.count(key) == 0)return;
+            //if(ap.count(key) == 0)return;
             __pop(ap[key]);
         }
 
@@ -193,29 +129,32 @@ namespace wahaha
         }
     private:
         void __pop(HeapIndex hid){
-            assert(ap.size() > 0);
+            //assert(ap.size() > 0);
             const HeapIndex lastHl = static_cast<HeapIndex>(ap.size()-1);
             if(hid != lastHl){
                 HeapIndex rid = lastHl;
                 std::swap(heap[hid], heap[rid]);
-                ap[*heap[hid].keyPtr] = hid;
-                ap[*heap[rid].keyPtr] = rid;
+                ap[heap[hid].key] = hid;
+                ap[heap[rid].key] = rid;
             }
-            ap.erase(*heap[lastHl].keyPtr);
+            ap.erase(heap[lastHl].key);
             heap.pop_back();
             __update(hid);
         }
         void __update(HeapIndex hid){
             const size_t hl = ap.size();
-            const Key* __restrict__ lastKeyPtr = nullptr;
+            bool swapOnce = false;
+            Key lastKey;
 
             while(hid > 0){
                 HeapIndex rid = (hid+1)/2-1;
                 if(ValueComp()(heap[rid].value, heap[hid].value)){
                     std::swap(heap[hid], heap[rid]);
-                    ap[*heap[hid].keyPtr] = hid;
+                    ap[heap[hid].key] = hid;
+                    //ap[heap[rid].key] = rid;
                     hid = rid;
-                    lastKeyPtr = heap[hid].keyPtr;
+                    swapOnce = true;
+                    lastKey = heap[hid].key;
                 }
                 else{
                     break;
@@ -233,18 +172,19 @@ namespace wahaha
 
                 if(ValueComp()(heap[hid].value, heap[rid].value)){
                     std::swap(heap[hid], heap[rid]);
-                    ap[*heap[hid].keyPtr] = hid;
+                    ap[heap[hid].key] = hid;
+                    //ap[heap[rid].key] = rid;
                     hid = rid;
-                    lastKeyPtr = heap[hid].keyPtr;
+                    swapOnce = true;
+                    lastKey = heap[hid].key;
                 }
                 else{
                     break;
                 }
             }
-
-            if(lastKeyPtr != nullptr)
+            if(swapOnce)
             {
-                ap[*lastKeyPtr] = hid;
+                ap[lastKey] = hid;
             }
         }
 
@@ -252,13 +192,6 @@ namespace wahaha
         MapContainer ap{};
         HeapContainer heap{};
     public:
-        iterator begin(){
-            return Iterator(this, 0);
-        }
-
-        iterator end(){
-            return Iterator(this, ap.size());
-        }
     };
 } // namespace std
 
