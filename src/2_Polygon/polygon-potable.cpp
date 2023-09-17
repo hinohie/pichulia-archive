@@ -1,3 +1,4 @@
+#include<algorithm>
 #include<math.h>
 using namespace std;
 using lld = long long int;
@@ -29,9 +30,9 @@ struct vec2 {
 		if (x - z.x)return x < z.x;
 		return y < z.y;
 	}
-    bool operator ==(const vec2 &z)const{
-        return (x == z.x && y == z.y);
-    }
+	bool operator ==(const vec2 &z)const{
+		return (x == z.x && y == z.y);
+	}
 	lf dist(vec2 p = vec2()) const {
 		lld xx = x - p.x;
 		lld yy = y - p.y;
@@ -70,9 +71,9 @@ struct vec2f {
 		if (x - z.x)return x < z.x;
 		return y < z.y;
 	}
-    bool operator ==(const vec2f &z)const{
-        return (x == z.x && y == z.y);
-    }
+	bool operator ==(const vec2f &z)const{
+		return (x == z.x && y == z.y);
+	}
 	lf dist(vec2f p = vec2f()) const {
 		lf xx = x - p.x;
 		lf yy = y - p.y;
@@ -90,40 +91,41 @@ struct vec2f {
 		y = yy;
 	}
 };
- 
+
+template<bool allow_multi_points_in_line = false>
 struct Polygon {
-    struct CONVEX_MAKER_WITHOUT_ATAN2 {
-        int i;
-        long long int dx;
-        long long int dy;
-        bool friend operator <(const CONVEX_MAKER_WITHOUT_ATAN2 &p, const CONVEX_MAKER_WITHOUT_ATAN2 &q) {
-            if (p.dx == 0) {
-                if (q.dx == 0) {
-                    return p.dy < q.dy;
-                }
-                return false;
-            }
-            if (q.dx == 0)return true;
-            if (p.dx * q.dy == p.dy * q.dx) {
-                return p.dx < q.dx;
-            }
-            return p.dy * q.dx < p.dx * q.dy;
-        }
-    };
+	struct CONVEX_MAKER_WITHOUT_ATAN2 {
+		int i;
+		long long int dx;
+		long long int dy;
+		bool friend operator <(const CONVEX_MAKER_WITHOUT_ATAN2 &p, const CONVEX_MAKER_WITHOUT_ATAN2 &q) {
+			if (p.dx == 0) {
+				if (q.dx == 0) {
+					return p.dy < q.dy;
+				}
+				return false;
+			}
+			if (q.dx == 0)return true;
+			if (p.dx * q.dy == p.dy * q.dx) {
+				return p.dx < q.dx;
+			}
+			return p.dy * q.dx < p.dx * q.dy;
+		}
+	};
 	vector<vec2> v;
 	int n;
 	void make_convex() {
 		sort(v.begin(),v.end());
 		v.erase(unique(v.begin(),v.end()),v.end());
 		n = v.size();
-        if(n<=1)return;
+		if(n<=1)return;
 		int i, j, k;
 		sort(v.begin(), v.end());
 		int si = 0;
 		vector<vec2> tv;
-        vector<int> stack(n);
-        vector<CONVEX_MAKER_WITHOUT_ATAN2> b(n);
-        
+		vector<int> stack(n);
+		vector<CONVEX_MAKER_WITHOUT_ATAN2> b(n);
+		
 		for (i = 1; i < n; i++) {
 			b[i].i = i;
 			b[i].dx = v[i].x - v[0].x;
@@ -131,45 +133,56 @@ struct Polygon {
 		}
 		sort(b.begin() + 1, b.end());
 		b[0].i = 0;
- 
+		if constexpr (allow_multi_points_in_line)
+		{
+			lld lastDx = b[n-1].dx;
+			lld lastDy = b[n-1].dy;
+			for(i=n-2;i>0;i--)
+			{
+				if(lastDx * b[i].dy != b[i].dx * lastDy)break;
+			}
+			reverse(b.begin()+i+1, b.end());
+		}
+
 		stack[0] = 0;
 		int sp = 1;
- 
+
 		for (i = 1; i < n; i++) {
 			int ti = b[i].i;
 			while (sp >= 2) {
-				//if (ccw(a[stack[sp - 2]], a[stack[sp - 1]], a[ti]) <= 0) 
-                if((v[stack[sp-1]] - v[stack[sp-2]])%(v[ti] - v[stack[sp-2]]) <= 0)
-                {
+				const lld ccwRet = (v[stack[sp-1]] - v[stack[sp-2]])%(v[ti] - v[stack[sp-2]]);
+				const bool outOfConvex = allow_multi_points_in_line ? ccwRet < 0 : ccwRet <= 0;
+				if(outOfConvex)
+				{
 					sp--;
 				}
 				else{
 					break;
-                }
+				}
 			}
 			stack[sp++] = ti;
 		}
- 
+
 		n = sp;
-        tv.resize(n);
+		tv.resize(n);
 		for (i = 0; i < n; i++) {
 			tv[i] = v[stack[i]];
 		}
 		v = tv;
- 
-        /*
+
+		/*
 		printf("%d : ", v.size());
 		for (auto it : v) {
 			printf("%lld,%lld ", it.x, it.y);
 		}
-        */
+		*/
 	}
-    void append_dual(){
-        v.resize(2*n);
-        for(int i=0;i<n;i++){
-            v[i+n] = v[i];
-        }
-    }
+	void append_dual(){
+		v.resize(2*n);
+		for(int i=0;i<n;i++){
+			v[i+n] = v[i];
+		}
+	}
 };
 lld ccw(vec2 p, vec2 q, vec2 r){
 	lld xx = p.x*q.y + q.x*r.y + r.x*p.y;
