@@ -91,7 +91,7 @@ namespace wahaha
             if(mapIter == ap.end()){
                 hid = static_cast<HeapIndex>(ap.size());
                 auto newIter = ap.insert(mapIter, {key, hid});
-                heap.emplace_back(newIter->first, value);
+                heap.emplace_back(key, value);
             }
             else{
                 hid = mapIter->second;
@@ -143,14 +143,18 @@ namespace wahaha
         }
         void __update(HeapIndex hid){
             const size_t hl = ap.size();
+            bool swapOnce = false;
+            Key lastKey;
 
             while(hid > 0){
                 HeapIndex rid = (hid+1)/2-1;
-                if(heap[rid].value < heap[hid].value){
+                if(ValueComp()(heap[rid].value, heap[hid].value)){
                     std::swap(heap[hid], heap[rid]);
                     ap[heap[hid].key] = hid;
                     //ap[heap[rid].key] = rid;
                     hid = rid;
+                    swapOnce = true;
+                    lastKey = heap[hid].key;
                 }
                 else{
                     break;
@@ -161,22 +165,27 @@ namespace wahaha
                 HeapIndex qid = hid*2 + 2;
                 HeapIndex rid = pid;
                 if(qid < hl){
-                    if(heap[rid].value < heap[qid].value){
+                    if(ValueComp()(heap[rid].value, heap[qid].value)){
                         rid = qid;
                     }
                 }
 
-                if(heap[hid].value < heap[rid].value){
+                if(ValueComp()(heap[hid].value, heap[rid].value)){
                     std::swap(heap[hid], heap[rid]);
                     ap[heap[hid].key] = hid;
                     //ap[heap[rid].key] = rid;
                     hid = rid;
+                    swapOnce = true;
+                    lastKey = heap[hid].key;
                 }
                 else{
                     break;
                 }
             }
-            ap[heap[hid].key] = hid;
+            if(swapOnce)
+            {
+                ap[lastKey] = hid;
+            }
         }
 
     private:
