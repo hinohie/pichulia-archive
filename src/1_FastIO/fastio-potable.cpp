@@ -1,3 +1,28 @@
+ /**
+  * Copyright (c) 2022. Eunki Hong @pichulia
+  *
+  * CC BY-SA 4.0 License.
+  * You are free to:
+  *  - Share — copy and redistribute the material in any medium or format
+  *  - Adapt — remix, transform, and build upon the material
+  *   for any purpose, even commercially.
+  * The licensor cannot revoke these freedoms as long as you follow the license terms.
+  * Under the following terms:
+  *  - Attribution — You must give appropriate credit, provide a link to the license,
+  *   and indicate if changes were made. You may do so in any reasonable manner,
+  *  but not in any way that suggests the licensor endorses you or your use.
+  * - ShareAlike — If you remix, transform, or build upon the material,
+  *  you must distribute your contributions under the same license as the original.
+  * - No additional restrictions — You may not apply legal terms or technological measures
+  *  that legally restrict others from doing anything the license permits.
+  *  - Notices — You do not have to comply with the license for elements of the material
+  *  in the public domain or where your use is permitted by an applicable exception or limitation.
+  *  No warranties are given. The license may not give you all of
+  * the permissions necessary for your intended use. For example,
+  * other rights such as publicity, privacy, or moral rights may limit how you use the material.
+  * You can find the full license text at https://creativecommons.org/licenses/by-sa/4.0/legalcode
+  */
+
 #pragma GCC optimize("O3")
 #pragma GCC optimize("Ofast")
 #pragma GCC optimize("unroll-loops")
@@ -14,12 +39,14 @@
 
 namespace
 {
+// Reference: https://github.com/hinohie/pichulia-archive/tree/main/src/1_FastIO
 class FastIn {
 public:
 	constexpr static int BUFFER_MAX = 1048576;
 	char buf[BUFFER_MAX + 1];
 	int pos;
 	FILE* fp;
+	bool fp_owned;
 	int pl;
 	int __eof;
 
@@ -29,16 +56,23 @@ public:
 	}
 
 private:
-	FastIn() {
+	FastIn() : fp(nullptr), fp_owned(false) {
 		clear();
 	}
 	~FastIn() {
-		//flush();
+		if(fp_owned && fp != nullptr){
+			fclose(fp);
+			fp_owned = false;
+		}
 	}
 	void clear() {
+		if(fp_owned && fp != nullptr){
+			fclose(fp);
+		}
 		pos = BUFFER_MAX;
 		pl = BUFFER_MAX;
 		fp = stdin;
+		fp_owned = false;
 		__eof = 0;
 	}
 	void read_buffer() {
@@ -74,7 +108,6 @@ private:
 		}
 		return minus ? -res : res;
 	}
-	
 	unsigned int __nextuint() {
 		unsigned int res = 0;
 		char c;
@@ -91,7 +124,6 @@ private:
 		}
 		return res;
 	}
-	
 	long long int __nextlld() {
 		long long int res = 0;
 		char c;
@@ -112,7 +144,6 @@ private:
 		}
 		return minus ? -res : res;
 	}
-	
 	unsigned long long int __nextulld() {
 		unsigned long long int res = 0;
 		char c;
@@ -129,7 +160,6 @@ private:
 		}
 		return res;
 	}
-	
 	double __nextlf() {
 		double res = 0;
 		double base = 1;
@@ -177,7 +207,6 @@ private:
 		}
 		return minus ? -res : res;
 	}
-
 	int __nextstring(char* x) {
 		int i = 0;
 		char c;
@@ -198,11 +227,12 @@ private:
 
 public:
 	static FastIn& Get() {
-		static FastIn instance;
+		thread_local static FastIn instance;
 		return instance;
 	}
-	static void setfp(FILE* _fp) {
+	static void setfp(FILE* _fp, bool _fp_owned = false) {
 		Get().fp = _fp;
+		Get().fp_owned = _fp_owned;
 	}
 	static bool eof() {
 		return Get().__eof;
@@ -236,6 +266,7 @@ public:
 	char buf[BUFFER_MAX + 1];
 	int pos;
 	FILE* fp;
+	bool fp_owned;
 	
 	// Customize yourselfs
 	static inline bool isEmpty(char x){
@@ -243,15 +274,23 @@ public:
 	}
 
 private:
-	FastOut() {
+	FastOut() : fp(nullptr), fp_owned(false) {
 		clear();
 	}
 	~FastOut() {
 		flush();
+		if(fp_owned && fp != nullptr){
+			fclose(fp);
+			fp_owned = false;
+		}
 	}
 	void clear() {
+		if(fp_owned && fp != nullptr){
+			fclose(fp);
+		}
 		pos = 0;
 		fp = stdout;
+		fp_owned = false;
 	}
 	void flush() {
 		if (pos > 0) {
@@ -352,7 +391,6 @@ private:
 		if (eow > 0)
 			__putchar(eow);
 	}
-	
 	void __nextulld(unsigned long long int x, char eow = ' ') {
 		if (x == 0) {
 			__putchar('0');
@@ -460,11 +498,12 @@ private:
 
 public:
 	static FastOut& Get(){
-		static FastOut instance;
+		thread_local static FastOut instance;
 		return instance;
 	}
-	static void setfp(FILE* _fp) {
+	static void setfp(FILE* _fp, bool _fp_owned = false) {
 		Get().fp = _fp;
+		Get().fp_owned = _fp_owned;
 	}
 	static void putchar(char c)
 	{
