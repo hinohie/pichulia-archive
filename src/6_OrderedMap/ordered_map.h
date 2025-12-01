@@ -167,7 +167,7 @@ namespace wahaha
             return Iterator(this, ret);
         }
 
-        iterator find(const Key& key)
+        iterator find(const Key& key) const
         {
             auto mapIter = ap.find(key);
             if(mapIter == ap.end()){

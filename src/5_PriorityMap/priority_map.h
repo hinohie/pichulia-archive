@@ -171,6 +171,9 @@ namespace wahaha
             assert(ap.size() > 0);
             return heap[0].value;
         }
+        bool hasKey(const Key& key) const{
+            return ap.count(key) != 0;
+        }
 
         iterator insert(const Key& key, const Value& value)
         {
@@ -202,6 +205,15 @@ namespace wahaha
             __pop(ap[key]);
         }
 
+        iterator find(const Key& key) const
+        {
+            auto mapIter = ap.find(key);
+            if(mapIter == ap.end()){
+                return end();
+            }
+
+            return Iterator(this, mapIter->second);
+        }
         const Value& operator[](Key key) {
             if(ap.count(key) == 0){
                 insert(key, Value());

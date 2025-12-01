@@ -107,6 +107,9 @@ namespace wahaha
             //assert(ap.size() > 0);
             return heap[0].value;
         }
+        bool hasKey(const Key& key) const{
+            return ap.count(key) != 0;
+        }
 
         void insert(const Key& key, const Value& value)
         {
